@@ -63,6 +63,10 @@ Environment variables for the container (`--env` option):
 * KSTESTS_BRANCH - kickstart-tests git branch to be used
 * BOOT_ISO - name of the installer boot iso from `data/images` to be tested (default is "boot.iso")
 * KSTEST_EXTRA_BOOTOPTS - additional boot options applied to all tests (semicolon separated)
+* KSTEST_HOST_BOOTOPTS - boot options that are a property of the machine rather
+  than of the run, appended to the above. Set this once when provisioning a
+  runner; it survives into the container because `launch` forwards every
+  `KSTEST_*` variable from the host.
 
 By default, the container runs the [run-kstest](./run-kstest) script. To get an
 interactive shell, append `bash` to the command line.
@@ -122,6 +126,18 @@ the host:
 
 With that, http downloads are cached and https ones are tunnelled (`CONNECT`),
 which is not cacheable but does at least work.
+
+On a permanent runner, set this once at provisioning time instead of passing it
+per run, using `KSTEST_HOST_BOOTOPTS` so it adds to the options the workflow
+already sets rather than replacing them:
+
+    # /etc/environment
+    KSTEST_HOST_BOOTOPTS=inst.proxy=http://10.88.0.1:3128
+
+The gateway address is specific to the machine, so derive it rather than
+copying the one above:
+
+    podman network inspect podman --format '{{range .Subnets}}{{.Gateway}}{{end}}'
 
 # Hints and tips
 

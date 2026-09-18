@@ -53,7 +53,19 @@ enable_uefi() {
     echo "true"
 }
 
-EXTRA_BOOTOPTS=$(echo "${KSTEST_EXTRA_BOOTOPTS}" | tr ';' ' ')
+# KSTEST_EXTRA_BOOTOPTS belongs to the test run and is set by whoever starts it
+# (the workflow, or permian from added_boot_options). KSTEST_HOST_BOOTOPTS
+# belongs to the machine and is set once when the runner is provisioned, for
+# options that are a property of this host rather than of the tests - the
+# address of a local caching proxy, for instance, which differs per runner and
+# so cannot live in the repository.
+#
+# These have to be two variables rather than one. containers/runner/launch
+# forwards every KSTEST_* variable from the host into the container, and does so
+# after the arguments the caller passed; podman lets the last --env for a key
+# win. A host-set KSTEST_EXTRA_BOOTOPTS would therefore silently replace the
+# run's own options rather than adding to them.
+EXTRA_BOOTOPTS=$(echo "${KSTEST_EXTRA_BOOTOPTS};${KSTEST_HOST_BOOTOPTS}" | tr ';' ' ')
 
 DEFAULT_BASIC_BOOTOPTS="debug=1 inst.debug ${EXTRA_BOOTOPTS}"
 
